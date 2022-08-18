@@ -1,0 +1,27 @@
+{
+    "name": "profiles-service",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start:build": "rimraf dist && tsc",
+        "dev:build": "tsc -w",
+        "dev:run": "nodemon dist/server.js",
+        "dev": "concurrently npm:dev:*",
+        "start:run": "node dist/server.js",
+        "start": "npm:start:*",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "rimraf": "^3.0.2",
+        "typescript": "^4.7.4"
+    },
+    "devDependencies": {
+        "@types/node": "^18.7.6",
+        "concurrently": "^7.3.0",
+        "nodemon": "^2.0.19"
+    }
+}
