@@ -1,6 +1,6 @@
 import { Schema, model, Types } from 'mongoose'
 
-interface IUserSetting {
+export interface IUserSetting {
     locationId: Types.ObjectId
     languageId: Types.ObjectId
     userId: Types.ObjectId

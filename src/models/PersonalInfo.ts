@@ -1,10 +1,14 @@
 import { Schema, Types, model } from 'mongoose'
 
-interface IPersonalInfo {
+export enum Gender {
+    male = 'male',
+    female = 'female'
+}
+export interface IPersonalInfo {
     email: string
     firstname: string
     lastname: string
-    gender: string
+    gender: Gender
     birthdate: Date
     aboutMe: string
     imageUrl: string
@@ -15,7 +19,7 @@ const personalInfoSchema = new Schema<IPersonalInfo>({
     email: { type: String, unique: true },
     firstname: { type: String },
     lastname: { type: String },
-    gender: { type: String },
+    gender: { type: String, enum: Gender },
     birthdate: { type: Date },
     aboutMe: { type: String },
     imageUrl: { type: String },

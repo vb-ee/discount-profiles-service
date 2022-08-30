@@ -1,4 +1,4 @@
-export { Language } from './Language'
+export { Language, IL } from './Language'
 export { Location } from './Location'
-export { UserSetting } from './UserSetting'
-export { PersonalInfo } from './PersonalInfo'
+export { UserSetting, IUserSetting } from './UserSetting'
+export { PersonalInfo, IPersonalInfo, Gender } from './PersonalInfo'
