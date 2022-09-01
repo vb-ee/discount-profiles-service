@@ -9,7 +9,7 @@ export interface IUserSetting {
 const userSettingSchema = new Schema<IUserSetting>({
     locationId: { type: Schema.Types.ObjectId, ref: 'Location' },
     languageId: { type: Schema.Types.ObjectId, ref: 'Language' },
-    userId: { type: Schema.Types.ObjectId }
+    userId: { type: Schema.Types.ObjectId, unique: true }
 })
 
 export const UserSetting = model<IUserSetting>('UserSetting', userSettingSchema)

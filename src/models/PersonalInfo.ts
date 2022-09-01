@@ -23,7 +23,7 @@ const personalInfoSchema = new Schema<IPersonalInfo>({
     birthdate: { type: Date },
     aboutMe: { type: String },
     imageUrl: { type: String },
-    userId: { type: Schema.Types.ObjectId }
+    userId: { type: Schema.Types.ObjectId, unique: true }
 })
 
 export const PersonalInfo = model<IPersonalInfo>(
