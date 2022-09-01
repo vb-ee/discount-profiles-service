@@ -1,28 +1,33 @@
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
-import { ExpressRouter } from './utils/ExpressRouter'
+import { LanguageController } from './controllers'
+import { errorMiddleware } from './middlewares'
 
 export class App {
     public app: express.Application
     public port: number
 
-    // todo: fix the controllers type
-    constructor(controllers, port: number) {
+    constructor(port: number) {
         this.app = express()
         this.port = port
 
-        this.initializeMiddleware()
-        this.initializeControllers(controllers)
+        this.initializeMiddlewares()
+        this.initializeRouters()
+        this.initializeErrorHandler()
     }
 
-    initializeMiddleware() {
+    private initializeMiddlewares() {
         this.app.use(cors())
         this.app.use(bodyParser.json())
     }
 
-    initializeRoutes() {
-        this.app.use(ExpressRouter.getInstance)
+    private initializeRouters() {
+        this.app.use('/', new LanguageController().router)
+    }
+
+    private initializeErrorHandler() {
+        this.app.use(errorMiddleware)
     }
 
     public listen() {
