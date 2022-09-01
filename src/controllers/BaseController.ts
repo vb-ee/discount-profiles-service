@@ -1,12 +1,11 @@
 import { Response, NextFunction } from 'express'
-import { Types } from 'mongoose'
 import { HttpException } from '../utils'
 
 export abstract class BaseController {
     public notFound(
         next: NextFunction,
         entityName?: string,
-        entityId?: Types.ObjectId
+        entityId?: string
     ) {
         return next(
             new HttpException(
