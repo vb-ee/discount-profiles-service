@@ -1,7 +1,12 @@
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
-import { LanguageController, LocationController } from './controllers'
+import {
+    LanguageController,
+    LocationController,
+    PersonalInfoController,
+    UserSettingController
+} from './controllers'
 import { errorMiddleware } from './middlewares'
 
 export class App {
@@ -13,7 +18,12 @@ export class App {
         this.port = port
 
         this.initializeMiddlewares()
-        this.initializeRouters()
+        this.initializeRouters([
+            new LanguageController(),
+            new LocationController(),
+            new UserSettingController(),
+            new PersonalInfoController()
+        ])
         this.initializeErrorHandler()
     }
 
@@ -22,9 +32,10 @@ export class App {
         this.app.use(bodyParser.json())
     }
 
-    private initializeRouters() {
-        this.app.use('/', new LanguageController().router)
-        this.app.use('/', new LocationController().router)
+    private initializeRouters(controllers: any[]) {
+        controllers.forEach((controller) =>
+            this.app.use('/', controller.router)
+        )
     }
 
     private initializeErrorHandler() {
