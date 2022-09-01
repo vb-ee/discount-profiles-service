@@ -1,3 +1,5 @@
 export { BaseController } from './BaseController'
 export { LanguageController } from './LanguageController'
 export { LocationController } from './LocationController'
+export { UserSettingController } from './UserSettingController'
+export { PersonalInfoController } from './PersonalInfoController'
