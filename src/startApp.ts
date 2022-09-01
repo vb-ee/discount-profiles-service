@@ -1,7 +1,7 @@
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
-import { LanguageController } from './controllers'
+import { LanguageController, LocationController } from './controllers'
 import { errorMiddleware } from './middlewares'
 
 export class App {
@@ -24,6 +24,7 @@ export class App {
 
     private initializeRouters() {
         this.app.use('/', new LanguageController().router)
+        this.app.use('/', new LocationController().router)
     }
 
     private initializeErrorHandler() {
