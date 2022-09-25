@@ -1,15 +1,16 @@
 import { Schema, model, Types } from 'mongoose'
+import { User } from './User'
 
 export interface IUserSetting {
-    locationId: Types.ObjectId
-    languageId: Types.ObjectId
-    userId: Types.ObjectId
+    location: Types.ObjectId
+    language: Types.ObjectId
+    user: Types.ObjectId
 }
 
 const userSettingSchema = new Schema<IUserSetting>({
-    locationId: { type: Schema.Types.ObjectId, ref: 'Location' },
-    languageId: { type: Schema.Types.ObjectId, ref: 'Language' },
-    userId: { type: Schema.Types.ObjectId, unique: true }
+    location: { type: Schema.Types.ObjectId, ref: 'Location' },
+    language: { type: Schema.Types.ObjectId, ref: 'Language' },
+    user: { type: Schema.Types.ObjectId, ref: User }
 })
 
 export const UserSetting = model<IUserSetting>('UserSetting', userSettingSchema)

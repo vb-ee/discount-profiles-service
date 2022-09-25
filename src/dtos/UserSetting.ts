@@ -4,11 +4,11 @@ import { IUserSetting } from '../models'
 
 export class UserSettingDto implements IUserSetting {
     @IsMongoId()
-    locationId: Types.ObjectId
+    location: Types.ObjectId
 
     @IsMongoId()
-    languageId: Types.ObjectId
+    language: Types.ObjectId
 
     @IsMongoId()
-    userId: Types.ObjectId
+    user: Types.ObjectId
 }

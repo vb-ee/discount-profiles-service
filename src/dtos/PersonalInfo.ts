@@ -27,5 +27,5 @@ export class PersonalInfoDto implements IPersonalInfo {
     imageUrl: string
 
     @IsMongoId()
-    userId: Types.ObjectId
+    user: Types.ObjectId
 }

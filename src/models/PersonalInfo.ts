@@ -1,4 +1,5 @@
 import { Schema, Types, model } from 'mongoose'
+import { User } from './User'
 
 export enum Gender {
     male = 'male',
@@ -12,7 +13,7 @@ export interface IPersonalInfo {
     birthdate: Date
     aboutMe: string
     imageUrl: string
-    userId: Types.ObjectId
+    user: Types.ObjectId
 }
 
 const personalInfoSchema = new Schema<IPersonalInfo>({
@@ -23,7 +24,7 @@ const personalInfoSchema = new Schema<IPersonalInfo>({
     birthdate: { type: Date },
     aboutMe: { type: String },
     imageUrl: { type: String },
-    userId: { type: Schema.Types.ObjectId, unique: true }
+    user: { type: Schema.Types.ObjectId, ref: User }
 })
 
 export const PersonalInfo = model<IPersonalInfo>(
