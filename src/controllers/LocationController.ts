@@ -1,10 +1,10 @@
 import { ExpressRouter } from '../utils'
 import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
-import { IL, Location } from '../models'
+import { ILocation, Location } from '../models'
 import { BaseController } from './BaseController'
 import { validationPipe } from '../middlewares'
-import { LDto } from '../dtos'
+import { LocationDto } from '../dtos'
 
 export class LocationController extends BaseController {
     public prefix = '/locations'
@@ -17,11 +17,15 @@ export class LocationController extends BaseController {
 
     initializeRoutes() {
         this.router.get(this.prefix, this.getLocations)
-        this.router.post(this.prefix, validationPipe(LDto), this.createLocation)
+        this.router.post(
+            this.prefix,
+            validationPipe(LocationDto),
+            this.createLocation
+        )
         this.router.get(`${this.prefix}/:id`, this.getLocationById)
         this.router.put(
             `${this.prefix}/:id`,
-            validationPipe(LDto, true),
+            validationPipe(LocationDto, true),
             this.updateLocationById
         )
         this.router.delete(`${this.prefix}/:id`, this.deleteLocationById)
@@ -29,12 +33,12 @@ export class LocationController extends BaseController {
 
     getLocations = asyncHandler(async (req: Request, res: Response) => {
         const locations = await Location.find()
-        this.ok(res, locations)
+        this.ok(res, 200, locations)
     })
 
     createLocation = asyncHandler(async (req: Request, res: Response) => {
-        await Location.create(<IL>req.body)
-        this.created(res)
+        const location = await Location.create(<ILocation>req.body)
+        this.ok(res, 201, location)
     })
 
     getLocationById = asyncHandler(
@@ -42,7 +46,7 @@ export class LocationController extends BaseController {
             const { locationId } = req.params
             const location = await Location.findById(locationId)
             if (!location) this.notFound(next, 'location', locationId)
-            this.ok(res, location)
+            this.ok(res, 200, location)
         }
     )
 
@@ -54,7 +58,7 @@ export class LocationController extends BaseController {
                 req.body
             )
             if (!location) this.notFound(next, 'location', locationId)
-            this.noContent(res)
+            this.ok(res, 200, location)
         }
     )
 

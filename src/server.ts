@@ -1,9 +1,9 @@
 import { initConnection } from './db/connection'
 import { App } from './startApp'
 
-initConnection('mongodb://profiles-service-db/profilesdb')
+initConnection()
     .then(() => {
-        const app = new App(7074)
+        const app = new App(8080)
         app.listen()
     })
     .catch((err) => console.log(err))

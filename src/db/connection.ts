@@ -1,5 +1,5 @@
 import { connect } from 'mongoose'
 
-export const initConnection = async (mongoDbUri: string) => {
-    await connect(mongoDbUri)
+export const initConnection = async () => {
+    await connect('mongodb://profiles-service-db:27017/profiles')
 }

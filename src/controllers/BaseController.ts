@@ -1,11 +1,12 @@
 import { Response, NextFunction } from 'express'
+import { Types } from 'mongoose'
 import { HttpException } from '../utils'
 
 export abstract class BaseController {
     public notFound(
         next: NextFunction,
         entityName?: string,
-        entityId?: string
+        entityId?: string | Types.ObjectId
     ) {
         return next(
             new HttpException(
@@ -21,15 +22,11 @@ export abstract class BaseController {
         return next(new HttpException(400, message ? message : 'Bad Request'))
     }
 
-    public ok<T>(res: Response, dto?: T) {
+    public ok<T>(res: Response, statusCode: 200 | 201, dto?: T) {
         if (dto) {
             res.type('application/json')
-            return res.status(200).json(dto)
-        } else return res.status(200)
-    }
-
-    public created(res: Response) {
-        return res.sendStatus(201)
+            return res.status(statusCode).json(dto)
+        } else return res.sendStatus(statusCode)
     }
 
     public conflict(next: NextFunction, message?: string) {

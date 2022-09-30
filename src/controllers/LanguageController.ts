@@ -1,10 +1,10 @@
 import { ExpressRouter } from '../utils'
 import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
-import { IL, Language } from '../models'
+import { ILanguage, Language } from '../models'
 import { BaseController } from './BaseController'
 import { validationPipe } from '../middlewares'
-import { LDto } from '../dtos'
+import { LanguageDto } from '../dtos'
 
 export class LanguageController extends BaseController {
     public prefix = '/languages'
@@ -17,11 +17,15 @@ export class LanguageController extends BaseController {
 
     initializeRoutes() {
         this.router.get(this.prefix, this.getLanguages)
-        this.router.post(this.prefix, validationPipe(LDto), this.createLanguage)
+        this.router.post(
+            this.prefix,
+            validationPipe(LanguageDto),
+            this.createLanguage
+        )
         this.router.get(`${this.prefix}/:id`, this.getLanguageById)
         this.router.put(
             `${this.prefix}/:id`,
-            validationPipe(LDto, true),
+            validationPipe(LanguageDto, true),
             this.updateLanguageById
         )
         this.router.delete(`${this.prefix}/:id`, this.deleteLanguageById)
@@ -29,12 +33,12 @@ export class LanguageController extends BaseController {
 
     getLanguages = asyncHandler(async (req: Request, res: Response) => {
         const languages = await Language.find()
-        this.ok(res, languages)
+        this.ok(res, 200, languages)
     })
 
     createLanguage = asyncHandler(async (req: Request, res: Response) => {
-        await Language.create(<IL>req.body)
-        this.created(res)
+        const language = await Language.create(<ILanguage>req.body)
+        this.ok(res, 201, language)
     })
 
     getLanguageById = asyncHandler(
@@ -42,7 +46,7 @@ export class LanguageController extends BaseController {
             const { languageId } = req.params
             const language = await Language.findById(languageId)
             if (!language) this.notFound(next, 'language', languageId)
-            this.ok(res, language)
+            this.ok(res, 200, language)
         }
     )
 
@@ -54,7 +58,7 @@ export class LanguageController extends BaseController {
                 req.body
             )
             if (!language) this.notFound(next, 'language', languageId)
-            this.noContent(res)
+            this.ok(res, 200, language)
         }
     )
 

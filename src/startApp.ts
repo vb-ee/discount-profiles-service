@@ -4,8 +4,9 @@ import express from 'express'
 import {
     LanguageController,
     LocationController,
-    PersonalInfoController,
-    UserSettingController
+    ProfileController,
+    UserSettingController,
+    MeController
 } from './controllers'
 import { errorMiddleware } from './middlewares'
 
@@ -22,7 +23,8 @@ export class App {
             new LanguageController(),
             new LocationController(),
             new UserSettingController(),
-            new PersonalInfoController()
+            new ProfileController(),
+            new MeController()
         ])
         this.initializeErrorHandler()
     }
@@ -30,6 +32,7 @@ export class App {
     private initializeMiddlewares() {
         this.app.use(cors())
         this.app.use(bodyParser.json())
+        this.app.use(bodyParser.urlencoded({ extended: true }))
     }
 
     private initializeRouters(controllers: any[]) {

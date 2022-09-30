@@ -1,7 +1,7 @@
 import { ExpressRouter } from '../utils'
 import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
-import { IL, UserSetting } from '../models'
+import { IUserSetting, UserSetting } from '../models'
 import { BaseController } from './BaseController'
 import { validationPipe } from '../middlewares'
 import { UserSettingDto } from '../dtos'
@@ -33,12 +33,12 @@ export class UserSettingController extends BaseController {
 
     getUserSettings = asyncHandler(async (req: Request, res: Response) => {
         const userSettings = await UserSetting.find()
-        this.ok(res, userSettings)
+        this.ok(res, 200, userSettings)
     })
 
     createUserSetting = asyncHandler(async (req: Request, res: Response) => {
-        await UserSetting.create(<IL>req.body)
-        this.created(res)
+        const userSetting = await UserSetting.create(<IUserSetting>req.body)
+        this.ok(res, 201, userSetting)
     })
 
     getUserSettingById = asyncHandler(
@@ -46,7 +46,7 @@ export class UserSettingController extends BaseController {
             const { userSettingId } = req.params
             const userSetting = await UserSetting.findById(userSettingId)
             if (!userSetting) this.notFound(next, 'userSetting', userSettingId)
-            this.ok(res, userSetting)
+            this.ok(res, 200, userSetting)
         }
     )
 
@@ -58,7 +58,7 @@ export class UserSettingController extends BaseController {
                 req.body
             )
             if (!userSetting) this.notFound(next, 'userSetting', userSettingId)
-            this.noContent(res)
+            this.ok(res, 200, userSetting)
         }
     )
 
