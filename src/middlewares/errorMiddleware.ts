@@ -10,5 +10,5 @@ export const errorMiddleware = (
     const status = error.status || 500
     const message = error.message || 'Server Error'
 
-    res.status(status).send({ message })
+    return res.status(status).send({ message })
 }
