@@ -1,7 +1,7 @@
 import { IsString } from 'class-validator'
-import { IL } from '../models'
+import { ILocation } from '../models'
 
-export class LDto implements IL {
+export class LocationDto implements ILocation {
     @IsString()
     public nameEn: string
 

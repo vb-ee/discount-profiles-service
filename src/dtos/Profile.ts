@@ -1,8 +1,8 @@
 import { IsDate, IsEmail, IsEnum, IsMongoId, IsString } from 'class-validator'
 import { Types } from 'mongoose'
-import { IPersonalInfo, Gender } from '../models'
+import { IProfile, Gender } from '../models'
 
-export class PersonalInfoDto implements IPersonalInfo {
+export class ProfileDto implements IProfile {
     @IsString()
     @IsEmail()
     email: string
@@ -22,9 +22,6 @@ export class PersonalInfoDto implements IPersonalInfo {
 
     @IsString()
     aboutMe: string
-
-    @IsString()
-    imageUrl: string
 
     @IsMongoId()
     user: Types.ObjectId
