@@ -8,9 +8,19 @@ export interface IUserSetting {
 }
 
 const userSettingSchema = new Schema<IUserSetting>({
-    location: { type: Schema.Types.ObjectId, ref: 'Location' },
-    language: { type: Schema.Types.ObjectId, ref: 'Language' },
-    user: { type: Schema.Types.ObjectId, ref: User }
+    location: {
+        type: Schema.Types.ObjectId,
+        ref: 'Location',
+        autopopulate: true
+    },
+    language: {
+        type: Schema.Types.ObjectId,
+        ref: 'Language',
+        autopopulate: true
+    },
+    user: { type: Schema.Types.ObjectId, ref: User, autopopulate: true }
 })
+
+userSettingSchema.plugin(require('mongoose-autopopulate'))
 
 export const UserSetting = model<IUserSetting>('UserSetting', userSettingSchema)
