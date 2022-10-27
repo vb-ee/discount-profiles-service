@@ -25,7 +25,7 @@ export abstract class BaseController {
     public ok<T>(res: Response, statusCode: 200 | 201, dto?: T) {
         if (dto) {
             res.type('application/json')
-            return res.status(statusCode).json(dto)
+            return res.status(statusCode).json({ dto })
         } else return res.sendStatus(statusCode)
     }
 
