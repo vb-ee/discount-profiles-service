@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { ILanguage, Language } from '../models'
 import { BaseController } from './BaseController'
-import { validationPipe } from '../middlewares'
+import { validationPipe, restrictToAdmin } from '../middlewares'
 import { LanguageDto } from '../dtos'
 
 export class LanguageController extends BaseController {
@@ -16,19 +16,23 @@ export class LanguageController extends BaseController {
     }
 
     initializeRoutes() {
-        this.router.get(this.prefix, this.getLanguages)
-        this.router.post(
-            this.prefix,
-            validationPipe(LanguageDto),
-            this.createLanguage
-        )
-        this.router.get(`${this.prefix}/:id`, this.getLanguageById)
-        this.router.put(
-            `${this.prefix}/:id`,
-            validationPipe(LanguageDto, true),
-            this.updateLanguageById
-        )
-        this.router.delete(`${this.prefix}/:id`, this.deleteLanguageById)
+        this.router
+            .route(this.prefix)
+            .get(this.getLanguages)
+            .post(
+                restrictToAdmin(),
+                validationPipe(LanguageDto),
+                this.createLanguage
+            )
+        this.router
+            .route(`${this.prefix}/:id`)
+            .get(this.getLanguageById)
+            .put(
+                restrictToAdmin(),
+                validationPipe(LanguageDto, true),
+                this.updateLanguageById
+            )
+            .delete(restrictToAdmin(), this.deleteLanguageById)
     }
 
     getLanguages = asyncHandler(async (req: Request, res: Response) => {

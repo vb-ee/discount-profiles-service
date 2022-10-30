@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { IProfile, Profile } from '../models'
 import { BaseController } from './BaseController'
-import { uploadImage, validationPipe } from '../middlewares'
+import { restrictToAdmin, uploadImage, validationPipe } from '../middlewares'
 import { ProfileDto } from '../dtos'
 
 export class ProfileController extends BaseController {
@@ -16,21 +16,24 @@ export class ProfileController extends BaseController {
     }
 
     initializeRoutes() {
-        this.router.get(this.prefix, this.getProfiles)
-        this.router.post(
-            this.prefix,
-            validationPipe(ProfileDto),
-            uploadImage.single('avatar'),
-            this.createProfile
-        )
-        this.router.get(`${this.prefix}/:id`, this.getProfileById)
-        this.router.put(
-            `${this.prefix}/:id`,
-            validationPipe(ProfileDto, true),
-            uploadImage.single('avatar'),
-            this.updateProfileById
-        )
-        this.router.delete(`${this.prefix}/:id`, this.deleteProfileById)
+        this.router.use(restrictToAdmin())
+        this.router
+            .route(this.prefix)
+            .get(this.getProfiles)
+            .post(
+                validationPipe(ProfileDto),
+                uploadImage.single('avatar'),
+                this.createProfile
+            )
+        this.router
+            .route(`${this.prefix}/:id`)
+            .get(this.getProfileById)
+            .put(
+                validationPipe(ProfileDto, true),
+                uploadImage.single('avatar'),
+                this.updateProfileById
+            )
+            .delete(this.deleteProfileById)
     }
 
     getProfiles = asyncHandler(async (req: Request, res: Response) => {
@@ -46,8 +49,11 @@ export class ProfileController extends BaseController {
                     'Image file has to be defined in req'
                 )
 
-            const imageUrl = `${req.file.destination}/${req.file.originalname}`
-            renameImagePath(<string>req.file.path, imageUrl)
+            const imageUrl = req.file.originalname
+            renameImagePath(
+                <string>req.file.path,
+                `${req.file.destination}/${imageUrl}`
+            )
 
             const profileToCreate = { ...(<IProfile>req.body), imageUrl }
             const profile = await Profile.create(profileToCreate)
@@ -75,9 +81,12 @@ export class ProfileController extends BaseController {
             if (!profile) return this.notFound(next, 'profile', profileId)
 
             if (req.file) {
+                const imageUrl = req.file.originalname
                 profile.removeImage()
-                imageUrl = `${req.file.destination}/${req.file.originalname}`
-                renameImagePath(<string>req.file.path, imageUrl)
+                renameImagePath(
+                    <string>req.file.path,
+                    `${req.file.destination}/${imageUrl}`
+                )
                 profileUpdateBody = { ...(<IProfile>req.body), imageUrl }
             } else profileUpdateBody = { ...(<IProfile>req.body) }
 

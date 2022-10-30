@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { IUserSetting, UserSetting } from '../models'
 import { BaseController } from './BaseController'
-import { validationPipe } from '../middlewares'
+import { restrictToAdmin, validationPipe } from '../middlewares'
 import { UserSettingDto } from '../dtos'
 
 export class UserSettingController extends BaseController {
@@ -16,19 +16,19 @@ export class UserSettingController extends BaseController {
     }
 
     initializeRoutes() {
-        this.router.get(this.prefix, this.getUserSettings)
-        this.router.post(
-            this.prefix,
-            validationPipe(UserSettingDto),
-            this.createUserSetting
-        )
-        this.router.get(`${this.prefix}/:id`, this.getUserSettingById)
-        this.router.put(
-            `${this.prefix}/:id`,
-            validationPipe(UserSettingDto, true),
-            this.updateUserSettingById
-        )
-        this.router.delete(`${this.prefix}/:id`, this.deleteUserSettingById)
+        this.router.use(restrictToAdmin())
+        this.router
+            .route(this.prefix)
+            .get(this.getUserSettings)
+            .post(validationPipe(UserSettingDto), this.createUserSetting)
+        this.router
+            .route(`${this.prefix}/:id`)
+            .get(this.getUserSettingById)
+            .put(
+                validationPipe(UserSettingDto, true),
+                this.updateUserSettingById
+            )
+            .delete(this.deleteUserSettingById)
     }
 
     getUserSettings = asyncHandler(async (req: Request, res: Response) => {

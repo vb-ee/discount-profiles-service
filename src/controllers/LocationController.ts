@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { ILocation, Location } from '../models'
 import { BaseController } from './BaseController'
-import { validationPipe } from '../middlewares'
+import { restrictToAdmin, validationPipe } from '../middlewares'
 import { LocationDto } from '../dtos'
 
 export class LocationController extends BaseController {
@@ -16,19 +16,23 @@ export class LocationController extends BaseController {
     }
 
     initializeRoutes() {
-        this.router.get(this.prefix, this.getLocations)
-        this.router.post(
-            this.prefix,
-            validationPipe(LocationDto),
-            this.createLocation
-        )
-        this.router.get(`${this.prefix}/:id`, this.getLocationById)
-        this.router.put(
-            `${this.prefix}/:id`,
-            validationPipe(LocationDto, true),
-            this.updateLocationById
-        )
-        this.router.delete(`${this.prefix}/:id`, this.deleteLocationById)
+        this.router
+            .route(this.prefix)
+            .get(this.getLocations)
+            .post(
+                restrictToAdmin(),
+                validationPipe(LocationDto),
+                this.createLocation
+            )
+        this.router
+            .route(`${this.prefix}/:id`)
+            .get(this.getLocationById)
+            .put(
+                restrictToAdmin(),
+                validationPipe(LocationDto, true),
+                this.updateLocationById
+            )
+            .delete(restrictToAdmin(), this.deleteLocationById)
     }
 
     getLocations = asyncHandler(async (req: Request, res: Response) => {

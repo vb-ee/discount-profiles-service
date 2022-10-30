@@ -5,7 +5,6 @@ import { IProfile, IUserSetting, Profile, UserSetting } from '../models'
 import { BaseController } from './BaseController'
 import { uploadImage, validationPipe } from '../middlewares'
 import { ProfileDto, UserSettingDto } from '../dtos'
-import { User } from '../models/User'
 
 export class MeController extends BaseController {
     private prefix = '/me'
@@ -17,33 +16,27 @@ export class MeController extends BaseController {
     }
 
     initializeRoutes() {
-        this.router.get(`${this.prefix}/profile`, this.getMyProfile)
-        this.router.post(
-            `${this.prefix}/profile`,
-            validationPipe(ProfileDto),
-            uploadImage.single('avatar'),
-            this.createMyProfile
-        )
-        this.router.put(
-            `${this.prefix}/profile`,
-            validationPipe(ProfileDto, true),
-            uploadImage.single('avatar'),
-            this.updateMyProfile
-        )
-        this.router.delete(`${this.prefix}/profile`, this.deleteMyProfile)
+        this.router
+            .route(`${this.prefix}/profile`)
+            .get(this.getMyProfile)
+            .post(
+                validationPipe(ProfileDto),
+                uploadImage.single('avatar'),
+                this.createMyProfile
+            )
+            .put(
+                validationPipe(ProfileDto, true),
+                uploadImage.single('avatar'),
+                this.updateMyProfile
+            )
+            .delete(this.deleteMyProfile)
 
-        this.router.get(`${this.prefix}/setting`, this.getMySetting)
-        this.router.post(
-            `${this.prefix}/setting`,
-            validationPipe(UserSettingDto),
-            this.createMySetting
-        )
-        this.router.put(
-            `${this.prefix}/setting`,
-            validationPipe(UserSettingDto, true),
-            this.updateMySetting
-        )
-        this.router.delete(`${this.prefix}/setting`, this.deleteMySetting)
+        this.router
+            .route(`${this.prefix}/setting`)
+            .get(this.getMySetting)
+            .post(validationPipe(UserSettingDto), this.createMySetting)
+            .put(validationPipe(UserSettingDto, true), this.updateMySetting)
+            .delete(this.deleteMySetting)
     }
 
     getMyProfile = asyncHandler(
