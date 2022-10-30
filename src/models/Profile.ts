@@ -1,6 +1,6 @@
 import { Schema, Types, model, Model } from 'mongoose'
 import { User } from './User'
-import fs from 'fs'
+import { unlink } from 'fs'
 
 export enum Gender {
     male = 'male',
@@ -36,7 +36,7 @@ const profileSchema = new Schema<IProfile, ProfileModel, IProfileMethods>({
 })
 
 profileSchema.methods.removeImage = function () {
-    fs.unlink(this.imageUrl, (err) => {
+    unlink(`${process.env.PWD}/images/${this.imageUrl}`, (err) => {
         if (err) throw err
     })
 }
