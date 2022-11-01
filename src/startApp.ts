@@ -8,7 +8,7 @@ import {
     UserSettingController,
     MeController
 } from './controllers'
-import { errorMiddleware } from './middlewares'
+import { errorMiddleware, verifyToken } from './middlewares'
 
 export class App {
     public app: express.Application
@@ -33,6 +33,7 @@ export class App {
         this.app.use(cors())
         this.app.use(bodyParser.json())
         this.app.use(bodyParser.urlencoded({ extended: true }))
+        this.app.use(verifyToken())
     }
 
     private initializeRouters(controllers: any[]) {

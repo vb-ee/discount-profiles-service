@@ -1,5 +1,5 @@
 import { connect } from 'mongoose'
 
 export const initConnection = async () => {
-    await connect('mongodb://profiles-service-db:27017/profiles')
+    await connect(<string>process.env.MONGO_DB_URI)
 }

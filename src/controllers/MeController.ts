@@ -7,7 +7,7 @@ import { uploadImage, validationPipe } from '../middlewares'
 import { ProfileDto, UserSettingDto } from '../dtos'
 
 export class MeController extends BaseController {
-    private prefix = '/me'
+    private prefix = ''
     public router = ExpressRouter.getInstance()
 
     constructor() {
