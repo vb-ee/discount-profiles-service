@@ -1,4 +1,12 @@
-import { IsDate, IsEmail, IsEnum, IsMongoId, IsString } from 'class-validator'
+import {
+    IsDateString,
+    IsEmail,
+    IsEnum,
+    IsMongoId,
+    IsOptional,
+    IsString,
+    IsUrl
+} from 'class-validator'
 import { Types } from 'mongoose'
 import { IProfile, Gender } from '../models'
 
@@ -17,12 +25,17 @@ export class ProfileDto implements IProfile {
     @IsEnum(Gender)
     gender: Gender
 
-    @IsDate()
+    @IsDateString()
     birthdate: Date
+
+    @IsUrl()
+    @IsOptional()
+    imageUrl: string
 
     @IsString()
     aboutMe: string
 
     @IsMongoId()
-    user: Types.ObjectId
+    @IsOptional()
+    userId: Types.ObjectId
 }

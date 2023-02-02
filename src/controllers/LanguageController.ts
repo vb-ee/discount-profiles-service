@@ -3,8 +3,9 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { ILanguage, Language } from '../models'
 import { BaseController } from './BaseController'
-import { validationPipe, restrictToAdmin } from '../middlewares'
+import { validationPipe } from '../middlewares'
 import { LanguageDto } from '../dtos'
+import { authHandler, restrictToAdmin, Tokens } from '@payhasly-discount/common'
 
 export class LanguageController extends BaseController {
     public prefix = '/languages'
@@ -20,6 +21,7 @@ export class LanguageController extends BaseController {
             .route(this.prefix)
             .get(this.getLanguages)
             .post(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 restrictToAdmin(),
                 validationPipe(LanguageDto),
                 this.createLanguage
@@ -28,11 +30,16 @@ export class LanguageController extends BaseController {
             .route(`${this.prefix}/:id`)
             .get(this.getLanguageById)
             .put(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 restrictToAdmin(),
                 validationPipe(LanguageDto, true),
                 this.updateLanguageById
             )
-            .delete(restrictToAdmin(), this.deleteLanguageById)
+            .delete(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.deleteLanguageById
+            )
     }
 
     getLanguages = asyncHandler(async (req: Request, res: Response) => {

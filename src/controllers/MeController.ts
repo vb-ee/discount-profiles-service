@@ -1,10 +1,16 @@
-import { ExpressRouter, renameImagePath } from '../utils'
+import { ExpressRouter } from '../utils'
 import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { IProfile, IUserSetting, Profile, UserSetting } from '../models'
 import { BaseController } from './BaseController'
 import { uploadImage, validationPipe } from '../middlewares'
 import { ProfileDto, UserSettingDto } from '../dtos'
+import {
+    authHandler,
+    generateImageUrl,
+    sendMessage,
+    Tokens
+} from '@payhasly-discount/common'
 
 export class MeController extends BaseController {
     private prefix = ''
@@ -18,32 +24,54 @@ export class MeController extends BaseController {
     initializeRoutes() {
         this.router
             .route(`${this.prefix}/profile`)
-            .get(this.getMyProfile)
+            .get(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                this.getMyProfile
+            )
             .post(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 validationPipe(ProfileDto),
                 uploadImage.single('avatar'),
                 this.createMyProfile
             )
             .put(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 validationPipe(ProfileDto, true),
                 uploadImage.single('avatar'),
                 this.updateMyProfile
             )
-            .delete(this.deleteMyProfile)
+            .delete(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                this.deleteMyProfile
+            )
 
         this.router
             .route(`${this.prefix}/setting`)
-            .get(this.getMySetting)
-            .post(validationPipe(UserSettingDto), this.createMySetting)
-            .put(validationPipe(UserSettingDto, true), this.updateMySetting)
-            .delete(this.deleteMySetting)
+            .get(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                this.getMySetting
+            )
+            .post(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                validationPipe(UserSettingDto),
+                this.createMySetting
+            )
+            .put(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                validationPipe(UserSettingDto, true),
+                this.updateMySetting
+            )
+            .delete(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                this.deleteMySetting
+            )
     }
 
     getMyProfile = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
 
-            const profile = await Profile.findOne({ user: id })
+            const profile = await Profile.findOne({ userId: id })
             if (!profile) return this.notFound(next, 'profile for user', id)
 
             this.ok(res, 200, profile)
@@ -54,7 +82,7 @@ export class MeController extends BaseController {
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
 
-            let profile = await Profile.findOne({ user: id })
+            let profile = await Profile.findOne({ userId: id })
             if (profile)
                 return this.conflict(
                     next,
@@ -67,10 +95,16 @@ export class MeController extends BaseController {
                     'Image file has to be defined in req'
                 )
 
-            const imageUrl = `${req.file.destination}/${req.file.originalname}`
-            renameImagePath(<string>req.file.path, imageUrl)
+            const imageUrl = generateImageUrl(
+                'API_GATEWAY_URL',
+                req.file.filename
+            )
 
-            const profileToCreate = { ...(<IProfile>req.body), imageUrl }
+            const profileToCreate = {
+                ...(<IProfile>req.body),
+                imageUrl,
+                userId: id
+            }
             profile = await Profile.create(profileToCreate)
 
             this.ok(res, 201, profile)
@@ -83,28 +117,31 @@ export class MeController extends BaseController {
             let profileUpdateBody: IProfile
             let imageUrl: string
 
-            let profile = await Profile.findOne({ user: id })
+            let profile = await Profile.findOne({ userId: id })
             if (!profile) return this.notFound(next, 'profile with user', id)
 
             if (req.file) {
-                profile.removeImage()
-                imageUrl = `${req.file.destination}/${req.file.originalname}`
-                renameImagePath(<string>req.file.path, imageUrl)
+                await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
+                imageUrl = generateImageUrl(
+                    'API_GATEWAY_URL',
+                    req.file.filename
+                )
                 profileUpdateBody = { ...(<IProfile>req.body), imageUrl }
             } else profileUpdateBody = { ...(<IProfile>req.body) }
 
-            profile = await profile.update(profileUpdateBody)
+            await profile.updateOne(profileUpdateBody)
 
-            this.ok(res, 200, profile)
+            this.ok(res, 200, { id: profile._id, ...profileUpdateBody })
         }
     )
 
     deleteMyProfile = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
-            const profile = await Profile.findOneAndDelete({ user: id })
+            const profile = await Profile.findOne({ userId: id })
             if (!profile) return this.notFound(next, 'profile with user', id)
-            profile.removeImage()
+            await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
+            await profile.delete()
             this.noContent(res)
         }
     )
@@ -113,7 +150,7 @@ export class MeController extends BaseController {
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
 
-            const setting = await UserSetting.findOne({ user: id })
+            const setting = await UserSetting.findOne({ userId: id })
             if (!setting) return this.notFound(next, 'setting for user', id)
 
             this.ok(res, 200, setting)
@@ -124,14 +161,17 @@ export class MeController extends BaseController {
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
 
-            let setting = await UserSetting.findOne({ user: id })
+            let setting = await UserSetting.findOne({ userId: id })
             if (setting)
                 return this.conflict(
                     next,
                     'setting for this user already exists'
                 )
 
-            setting = await UserSetting.create(<IUserSetting>req.body)
+            setting = await UserSetting.create({
+                ...(<IUserSetting>req.body),
+                userId: id
+            })
 
             this.ok(res, 201, setting)
         }
@@ -141,7 +181,7 @@ export class MeController extends BaseController {
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
 
-            let setting = await UserSetting.findOne({ user: id })
+            let setting = await UserSetting.findOne({ userId: id })
             if (!setting) return this.notFound(next, 'setting with user', id)
 
             setting = await setting.update(<IUserSetting>req.body)
@@ -153,7 +193,7 @@ export class MeController extends BaseController {
     deleteMySetting = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
-            const setting = await UserSetting.findOneAndDelete({ user: id })
+            const setting = await UserSetting.findOneAndDelete({ userId: id })
             if (!setting) return this.notFound(next, 'setting with user', id)
             this.noContent(res)
         }

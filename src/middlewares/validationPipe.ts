@@ -12,12 +12,17 @@ export const validationPipe = (
             skipMissingProperties
         }).then((errors) => {
             if (errors.length > 0) {
-                const message = errors
-                    .map((error) => {
-                        if (error.constraints) Object.values(error.constraints)
-                    })
-                    .join(', ')
-                next(new HttpException(400, message))
+                let errorsToSend: { [key: string]: string } = {}
+                // looping through each item of errors array
+                for (const errorItem of errors) {
+                    // looping through each key:value of constraints object
+                    for (const key in errorItem.constraints) {
+                        // assign each key of consttraints object to errorKeys object
+                        errorsToSend[key] = errorItem.constraints[key]
+                    }
+                }
+                console.log(errorsToSend)
+                next(new HttpException(400, JSON.stringify(errorsToSend)))
             } else {
                 next()
             }

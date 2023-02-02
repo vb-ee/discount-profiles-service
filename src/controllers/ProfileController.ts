@@ -1,10 +1,17 @@
-import { ExpressRouter, renameImagePath } from '../utils'
+import { ExpressRouter } from '../utils'
 import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { IProfile, Profile } from '../models'
 import { BaseController } from './BaseController'
-import { restrictToAdmin, uploadImage, validationPipe } from '../middlewares'
+import { uploadImage, validationPipe } from '../middlewares'
 import { ProfileDto } from '../dtos'
+import {
+    generateImageUrl,
+    sendMessage,
+    restrictToAdmin,
+    authHandler,
+    Tokens
+} from '@payhasly-discount/common'
 
 export class ProfileController extends BaseController {
     private prefix = '/profiles'
@@ -16,24 +23,39 @@ export class ProfileController extends BaseController {
     }
 
     initializeRoutes() {
-        this.router.use(restrictToAdmin())
         this.router
             .route(this.prefix)
-            .get(this.getProfiles)
+            .get(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.getProfiles
+            )
             .post(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
                 validationPipe(ProfileDto),
                 uploadImage.single('avatar'),
                 this.createProfile
             )
         this.router
             .route(`${this.prefix}/:id`)
-            .get(this.getProfileById)
+            .get(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.getProfileById
+            )
             .put(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
                 validationPipe(ProfileDto, true),
                 uploadImage.single('avatar'),
                 this.updateProfileById
             )
-            .delete(this.deleteProfileById)
+            .delete(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.deleteProfileById
+            )
     }
 
     getProfiles = asyncHandler(async (req: Request, res: Response) => {
@@ -49,14 +71,15 @@ export class ProfileController extends BaseController {
                     'Image file has to be defined in req'
                 )
 
-            const imageUrl = req.file.originalname
-            renameImagePath(
-                <string>req.file.path,
-                `${req.file.destination}/${imageUrl}`
+            const imageUrl = generateImageUrl(
+                'API_GATEWAY_URL',
+                req.file.filename
             )
 
-            const profileToCreate = { ...(<IProfile>req.body), imageUrl }
-            const profile = await Profile.create(profileToCreate)
+            const profile = await Profile.create({
+                ...(<IProfile>req.body),
+                imageUrl
+            })
 
             this.ok(res, 201, profile)
         }
@@ -75,33 +98,32 @@ export class ProfileController extends BaseController {
         async (req: Request, res: Response, next: NextFunction) => {
             const { profileId } = req.params
             let profileUpdateBody: IProfile
-            let imageUrl: string
 
             let profile = await Profile.findById(profileId)
             if (!profile) return this.notFound(next, 'profile', profileId)
 
             if (req.file) {
-                const imageUrl = req.file.originalname
-                profile.removeImage()
-                renameImagePath(
-                    <string>req.file.path,
-                    `${req.file.destination}/${imageUrl}`
+                await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
+                const imageUrl = generateImageUrl(
+                    'API_GATEWAY_URL',
+                    req.file.filename
                 )
                 profileUpdateBody = { ...(<IProfile>req.body), imageUrl }
             } else profileUpdateBody = { ...(<IProfile>req.body) }
 
-            profile = await profile.update(profileUpdateBody)
+            await profile.updateOne(profileUpdateBody)
 
-            this.ok(res, 200, profile)
+            this.ok(res, 200, { id: profile._id, ...profileUpdateBody })
         }
     )
 
     deleteProfileById = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { profileId } = req.params
-            const profile = await Profile.findByIdAndDelete(profileId)
+            const profile = await Profile.findById(profileId)
             if (!profile) return this.notFound(next, 'profile', profileId)
-            profile.removeImage()
+            await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
+            await profile.delete()
             this.noContent(res)
         }
     )

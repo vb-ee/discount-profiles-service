@@ -3,8 +3,9 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { ILocation, Location } from '../models'
 import { BaseController } from './BaseController'
-import { restrictToAdmin, validationPipe } from '../middlewares'
+import { validationPipe } from '../middlewares'
 import { LocationDto } from '../dtos'
+import { restrictToAdmin, authHandler, Tokens } from '@payhasly-discount/common'
 
 export class LocationController extends BaseController {
     public prefix = '/locations'
@@ -20,6 +21,7 @@ export class LocationController extends BaseController {
             .route(this.prefix)
             .get(this.getLocations)
             .post(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 restrictToAdmin(),
                 validationPipe(LocationDto),
                 this.createLocation
@@ -28,11 +30,16 @@ export class LocationController extends BaseController {
             .route(`${this.prefix}/:id`)
             .get(this.getLocationById)
             .put(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 restrictToAdmin(),
                 validationPipe(LocationDto, true),
                 this.updateLocationById
             )
-            .delete(restrictToAdmin(), this.deleteLocationById)
+            .delete(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.deleteLocationById
+            )
     }
 
     getLocations = asyncHandler(async (req: Request, res: Response) => {

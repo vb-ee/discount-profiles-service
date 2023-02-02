@@ -1,22 +1,36 @@
-import { Schema } from 'mongoose'
-import { createConnection } from 'mongoose'
-
-const userDatabase = createConnection('mongodb://users-service-db/usersdb')
+import mongoose, { model, Schema, Types } from 'mongoose'
+import { Profile } from './Profile'
+import { UserSetting } from './UserSetting'
 // Create an interface representing a document in MongoDB.
 export interface IUser {
+    id: Types.ObjectId
     phone: string
-    password: string
     isAdmin: boolean
+    createdAt: Date
+    updatedAt: Date
 }
 
 // Create a Schema corresponding to the document interfaces.
 export const userSchema = new Schema<IUser>(
     {
-        phone: { type: String, required: true, unique: true },
-        password: { type: String, required: true, minlength: 6 },
+        id: Types.ObjectId,
+        phone: String,
         isAdmin: { type: Boolean, default: false }
     },
-    { timestamps: true }
+    {
+        toJSON: {
+            transform(doc, ret) {
+                delete ret._id
+            }
+        },
+        versionKey: false
+    }
 )
 
-export const User = userDatabase.model('User', userSchema)
+userSchema.post('findOneAndDelete', async function (doc, next) {
+    await Profile.findOneAndDelete({ userId: doc.id })
+    await UserSetting.findOneAndDelete({ userId: doc.id })
+    next()
+})
+
+export const User = model<IUser>('User', userSchema)

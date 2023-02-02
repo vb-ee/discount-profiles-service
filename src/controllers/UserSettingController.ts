@@ -3,8 +3,9 @@ import asyncHandler from 'express-async-handler'
 import { NextFunction, Request, Response } from 'express'
 import { IUserSetting, UserSetting } from '../models'
 import { BaseController } from './BaseController'
-import { restrictToAdmin, validationPipe } from '../middlewares'
+import { validationPipe } from '../middlewares'
 import { UserSettingDto } from '../dtos'
+import { authHandler, restrictToAdmin, Tokens } from '@payhasly-discount/common'
 
 export class UserSettingController extends BaseController {
     private prefix = '/user-settings'
@@ -16,19 +17,37 @@ export class UserSettingController extends BaseController {
     }
 
     initializeRoutes() {
-        this.router.use(restrictToAdmin())
         this.router
             .route(this.prefix)
-            .get(this.getUserSettings)
-            .post(validationPipe(UserSettingDto), this.createUserSetting)
+            .get(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.getUserSettings
+            )
+            .post(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                validationPipe(UserSettingDto),
+                this.createUserSetting
+            )
         this.router
             .route(`${this.prefix}/:id`)
-            .get(this.getUserSettingById)
+            .get(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.getUserSettingById
+            )
             .put(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
                 validationPipe(UserSettingDto, true),
                 this.updateUserSettingById
             )
-            .delete(this.deleteUserSettingById)
+            .delete(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                restrictToAdmin(),
+                this.deleteUserSettingById
+            )
     }
 
     getUserSettings = asyncHandler(async (req: Request, res: Response) => {
