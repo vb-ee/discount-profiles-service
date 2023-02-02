@@ -20,7 +20,7 @@ const userSettingSchema = new Schema<IUserSetting>(
             required: true,
             autopopulate: true
         },
-        userId: { type: Schema.Types.ObjectId, autopopulate: true }
+        userId: { type: Schema.Types.ObjectId }
     },
     {
         toJSON: {

@@ -25,7 +25,7 @@ const profileSchema = new Schema<IProfile>(
         birthdate: { type: Date },
         aboutMe: { type: String },
         imageUrl: { type: String },
-        userId: { type: Schema.Types.ObjectId, autopopulate: true }
+        userId: { type: Schema.Types.ObjectId }
     },
     {
         toJSON: {
@@ -46,7 +46,5 @@ profileSchema.virtual('user', {
     foreignField: 'id',
     justOne: true
 })
-
-profileSchema.plugin(require('mongoose-autopopulate'))
 
 export const Profile = model<IProfile>('Profile', profileSchema)

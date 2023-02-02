@@ -71,7 +71,9 @@ export class MeController extends BaseController {
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
 
-            const profile = await Profile.findOne({ userId: id })
+            const profile = await Profile.findOne({ userId: id }).populate(
+                'user'
+            )
             if (!profile) return this.notFound(next, 'profile for user', id)
 
             this.ok(res, 200, profile)
@@ -150,7 +152,9 @@ export class MeController extends BaseController {
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
 
-            const setting = await UserSetting.findOne({ userId: id })
+            const setting = await UserSetting.findOne({ userId: id }).populate(
+                'user'
+            )
             if (!setting) return this.notFound(next, 'setting for user', id)
 
             this.ok(res, 200, setting)
