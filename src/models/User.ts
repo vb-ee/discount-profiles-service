@@ -1,4 +1,4 @@
-import mongoose, { model, Schema, Types } from 'mongoose'
+import { model, Schema, Types } from 'mongoose'
 import { Profile } from './Profile'
 import { UserSetting } from './UserSetting'
 // Create an interface representing a document in MongoDB.

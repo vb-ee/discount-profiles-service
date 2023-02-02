@@ -33,7 +33,8 @@ const profileSchema = new Schema<IProfile>(
                 ret.id = ret._id
                 delete ret._id
                 delete ret.__v
-            }
+            },
+            virtuals: true
         },
         toObject: { virtuals: true }
     }

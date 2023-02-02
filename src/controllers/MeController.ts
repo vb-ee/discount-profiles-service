@@ -184,9 +184,9 @@ export class MeController extends BaseController {
             let setting = await UserSetting.findOne({ userId: id })
             if (!setting) return this.notFound(next, 'setting with user', id)
 
-            setting = await setting.update(<IUserSetting>req.body)
+            await setting.updateOne(<IUserSetting>req.body)
 
-            this.ok(res, 200, setting)
+            this.ok(res, 200, { id: setting._id, ...req.body })
         }
     )
 

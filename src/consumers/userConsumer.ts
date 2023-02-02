@@ -19,8 +19,8 @@ export const updateUser = consumeMessage(
     'updateUser',
     async (msg) => {
         if (msg) {
-            console.log(JSON.parse(msg.content.toString()))
-            // await User.updateOne({ id }, { phone, isAdmin })
+            const { id } = JSON.parse(msg.content.toString())
+            await User.updateOne({ id }, JSON.parse(msg.content.toString()))
             console.log('user updated')
         }
     }
