@@ -1,3 +1,4 @@
+import { sendMessage } from '@payhasly-discount/common'
 import { model, Schema, Types } from 'mongoose'
 import { Profile } from './Profile'
 import { UserSetting } from './UserSetting'
@@ -28,8 +29,15 @@ export const userSchema = new Schema<IUser>(
 )
 
 userSchema.post('findOneAndDelete', async function (doc, next) {
-    await Profile.findOneAndDelete({ userId: doc.id })
+    const profile = await Profile.findOneAndDelete({ userId: doc.id })
+    if (profile?.imageUrl && profile.imageUrl !== '')
+        await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
     await UserSetting.findOneAndDelete({ userId: doc.id })
+    next()
+})
+
+userSchema.post('save', async function (doc, next) {
+    await Profile.create({ userId: doc.id })
     next()
 })
 

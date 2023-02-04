@@ -23,6 +23,13 @@ export class MeController extends BaseController {
 
     initializeRoutes() {
         this.router
+            .route(`${this.prefix}/profile-image`)
+            .put(
+                authHandler(Tokens.accessToken, 'JWT_ACCESS'),
+                uploadImage.single('avatar'),
+                this.updateProfileImage
+            )
+        this.router
             .route(`${this.prefix}/profile`)
             .get(
                 authHandler(Tokens.accessToken, 'JWT_ACCESS'),
@@ -31,13 +38,11 @@ export class MeController extends BaseController {
             .post(
                 authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 validationPipe(ProfileDto),
-                uploadImage.single('avatar'),
                 this.createMyProfile
             )
             .put(
                 authHandler(Tokens.accessToken, 'JWT_ACCESS'),
                 validationPipe(ProfileDto, true),
-                uploadImage.single('avatar'),
                 this.updateMyProfile
             )
             .delete(
@@ -70,12 +75,10 @@ export class MeController extends BaseController {
     getMyProfile = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
-
             const profile = await Profile.findOne({ userId: id }).populate(
                 'user'
             )
             if (!profile) return this.notFound(next, 'profile for user', id)
-
             this.ok(res, 200, profile)
         }
     )
@@ -91,23 +94,10 @@ export class MeController extends BaseController {
                     'profile for this user already exists'
                 )
 
-            if (!req.file)
-                return this.badRequest(
-                    next,
-                    'Image file has to be defined in req'
-                )
-
-            const imageUrl = generateImageUrl(
-                'API_GATEWAY_URL',
-                req.file.filename
-            )
-
-            const profileToCreate = {
+            profile = await Profile.create({
                 ...(<IProfile>req.body),
-                imageUrl,
                 userId: id
-            }
-            profile = await Profile.create(profileToCreate)
+            })
 
             this.ok(res, 201, profile)
         }
@@ -116,24 +106,10 @@ export class MeController extends BaseController {
     updateMyProfile = asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             const { id } = req.payload
-            let profileUpdateBody: IProfile
-            let imageUrl: string
-
             let profile = await Profile.findOne({ userId: id })
             if (!profile) return this.notFound(next, 'profile with user', id)
-
-            if (req.file) {
-                await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
-                imageUrl = generateImageUrl(
-                    'API_GATEWAY_URL',
-                    req.file.filename
-                )
-                profileUpdateBody = { ...(<IProfile>req.body), imageUrl }
-            } else profileUpdateBody = { ...(<IProfile>req.body) }
-
-            await profile.updateOne(profileUpdateBody)
-
-            this.ok(res, 200, { id: profile._id, ...profileUpdateBody })
+            await profile.updateOne({ ...req.body })
+            this.ok(res, 200, { id: profile._id, ...req.body })
         }
     )
 
@@ -142,7 +118,8 @@ export class MeController extends BaseController {
             const { id } = req.payload
             const profile = await Profile.findOne({ userId: id })
             if (!profile) return this.notFound(next, 'profile with user', id)
-            await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
+            if (profile.imageUrl && profile.imageUrl !== '')
+                await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
             await profile.delete()
             this.noContent(res)
         }
@@ -200,6 +177,42 @@ export class MeController extends BaseController {
             const setting = await UserSetting.findOneAndDelete({ userId: id })
             if (!setting) return this.notFound(next, 'setting with user', id)
             this.noContent(res)
+        }
+    )
+
+    updateProfileImage = asyncHandler(
+        async (req: Request, res: Response, next: NextFunction) => {
+            const { id } = req.payload
+            let profile = await Profile.findOne({ userId: id })
+            if (!profile) return this.notFound(next, 'profile with user', id)
+
+            if (!req.file) {
+                if (!profile.imageUrl || profile.imageUrl === '')
+                    return this.notFound(next, 'image for the user', id)
+                await sendMessage('AMQP_URL', profile.imageUrl, 'deleteImage')
+                profile.imageUrl = ''
+                await profile.save()
+                this.noContent(res)
+            } else {
+                if (!profile.imageUrl || profile.imageUrl === '')
+                    profile.imageUrl = generateImageUrl(
+                        'API_GATEWAY_URL',
+                        req.file.filename
+                    )
+                else {
+                    await sendMessage(
+                        'AMQP_URL',
+                        profile.imageUrl,
+                        'deleteImage'
+                    )
+                    profile.imageUrl = generateImageUrl(
+                        'API_GATEWAY_URL',
+                        req.file.filename
+                    )
+                }
+                await profile.save()
+                this.ok(res, 201, profile)
+            }
         }
     )
 }

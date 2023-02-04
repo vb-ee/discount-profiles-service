@@ -18,7 +18,7 @@ export interface IProfile {
 
 const profileSchema = new Schema<IProfile>(
     {
-        email: { type: String, unique: true },
+        email: { type: String, unique: true, default: '' },
         firstname: { type: String },
         lastname: { type: String },
         gender: { type: String, enum: Gender },
@@ -33,6 +33,7 @@ const profileSchema = new Schema<IProfile>(
                 ret.id = ret._id
                 delete ret._id
                 delete ret.__v
+                delete ret.userId
             },
             virtuals: true
         },

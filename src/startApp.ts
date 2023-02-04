@@ -9,7 +9,7 @@ import {
     MeController
 } from './controllers'
 import { errorMiddleware } from './middlewares'
-
+import * as consumers from './consumers/userConsumer'
 export class App {
     public app: express.Application
     public port: number
@@ -26,6 +26,7 @@ export class App {
             new UserSettingController(),
             new ProfileController()
         ])
+        this.intializeConsumers(consumers)
         this.initializeErrorHandler()
     }
 
@@ -39,6 +40,10 @@ export class App {
         controllers.forEach((controller) =>
             this.app.use('/', controller.router)
         )
+    }
+
+    private intializeConsumers(consumers: { [key: string]: Promise<void> }) {
+        for (const consumer in consumers) consumer
     }
 
     private initializeErrorHandler() {

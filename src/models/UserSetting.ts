@@ -11,13 +11,11 @@ const userSettingSchema = new Schema<IUserSetting>(
         location: {
             type: Schema.Types.ObjectId,
             ref: 'Location',
-            required: true,
             autopopulate: true
         },
         language: {
             type: Schema.Types.ObjectId,
             ref: 'Language',
-            required: true,
             autopopulate: true
         },
         userId: { type: Schema.Types.ObjectId }
@@ -28,6 +26,7 @@ const userSettingSchema = new Schema<IUserSetting>(
                 ret.id = ret._id
                 delete ret._id
                 delete ret.__v
+                delete ret.userId
             },
             virtuals: true
         },

@@ -3,12 +3,11 @@ import { User } from '../models/User'
 
 export const createUser = consumeMessage(
     'AMQP_URL',
-    'createUser',
+    'createUserProfile',
     async (msg) => {
         if (msg) {
-            const user = JSON.parse(msg.content.toString())
             User.init()
-            await User.create(user)
+            await User.create(JSON.parse(msg))
             console.log('User created')
         }
     }
@@ -19,8 +18,8 @@ export const updateUser = consumeMessage(
     'updateUser',
     async (msg) => {
         if (msg) {
-            const { id } = JSON.parse(msg.content.toString())
-            await User.updateOne({ id }, JSON.parse(msg.content.toString()))
+            const { id } = JSON.parse(msg)
+            await User.updateOne({ id }, JSON.parse(msg))
             console.log('user updated')
         }
     }
@@ -28,10 +27,10 @@ export const updateUser = consumeMessage(
 
 export const deleteUser = consumeMessage(
     'AMQP_URL',
-    'deleteUser',
+    'deleteUserProfile',
     async (msg) => {
         if (msg) {
-            await User.findOneAndDelete({ id: msg.content.toString() })
+            await User.findOneAndDelete({ id: msg })
             console.log('user deleted')
         }
     }
